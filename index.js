@@ -8,23 +8,16 @@ const main = document.querySelector('.text');
 
 const selectText = () => {
   document.querySelector('br') ? document.querySelector('br').remove() : '';
-  const range = window.getSelection().getRangeAt(0);
+
   const currentSelection = window.getSelection();
   let startSelection = window.getSelection().anchorOffset;
   let endSelection = window.getSelection().extentOffset;
-
 
   const beforeSpan = document.createElement('span');
   const mainSpan = document.createElement('span');
   const afterSpan = document.createElement('span');
 
-  if (currentSelection.anchorNode.parentNode.closest('span') === null) {
-    const span = document.createElement('span');
-    span.setAttribute('class', 'selected');
-    const selectionContents = range.extractContents();
-    span.appendChild(selectionContents);
-    range.insertNode(span);
-  } if (currentSelection.anchorNode.parentNode === currentSelection.extentNode.parentNode) {
+  if (currentSelection.anchorNode.parentNode === currentSelection.extentNode.parentNode) {
     if (endSelection < startSelection) {
       const tempVar = endSelection;
       endSelection = startSelection;
@@ -48,36 +41,52 @@ const selectText = () => {
 
     currentSelection.anchorNode.parentNode.closest('span').remove();
   } else {
-    const oldSpan = currentSelection.anchorNode.parentNode.closest('span');
-    mainSpan.setAttribute('class', 'selected');
+    let startSpan = currentSelection.anchorNode.parentNode;
+    const endSpan = currentSelection.extentNode.parentNode;
+    startSpan.classList.add('start');
+    endSpan.classList.add('end');
+
+    while (startSpan !== endSpan) {
+      startSpan.classList.add('selecteList');
+      startSpan = startSpan.nextElementSibling;
+      startSpan.classList.add('selecteList');
+    }
+
     beforeSpan.innerHTML = getString(currentSelection.anchorNode.parentNode.textContent, 0, startSelection);
-    mainSpan.innerHTML = currentSelection.toString();
-    afterSpan.innerHTML = getString(currentSelection.extentNode.parentNode.textContent, endSelection, currentSelection.extentNode.parentNode.textContent.length);
+    beforeSpan.style.cssText = currentSelection.anchorNode.parentNode.style.cssText;
+    currentSelection.anchorNode.parentNode.innerText = getString(currentSelection.anchorNode.parentNode.textContent, startSelection, currentSelection.anchorNode.length);
 
-    beforeSpan.style.cssText = oldSpan.style.cssText;
-    mainSpan.style.cssText = oldSpan.style.cssText;
+    afterSpan.innerHTML = getString(currentSelection.extentNode.parentNode.textContent, endSelection, currentSelection.extentNode.length);
     afterSpan.style.cssText = currentSelection.extentNode.parentNode.style.cssText;
+    currentSelection.extentNode.parentNode.innerText = getString(currentSelection.extentNode.parentNode.textContent, 0, endSelection);
 
-    main.insertBefore(mainSpan, oldSpan.nextSibling);
-    main.insertBefore(beforeSpan, mainSpan);
-    main.insertBefore(afterSpan, mainSpan.nextSibling);
+    main.insertBefore(beforeSpan, document.querySelector('.start'));
+    main.insertBefore(afterSpan, document.querySelector('.end').nextSibling);
 
-    currentSelection.anchorNode.parentNode.closest('span').remove();
-    currentSelection.extentNode.parentNode.remove();
+
+    document.querySelector('.start').classList.remove('start');
+    endSpan.classList.remove('end');
   }
 };
 
-const combineSimilarStyle = (selectedElem) => {
-  nextElem = selectedElem.nextElementSibling;
-  prevElem = selectedElem.previousElementSibling;
 
-  if (selectedElem.nextElementSibling !== null && selectedElem.style.cssText === nextElem.style.cssText) {
-    selectedElem.textContent += nextElem.textContent;
-    nextElem.remove();
-  }
-  if (selectedElem.previousElementSibling !== null && selectedElem.style.cssText === prevElem.style.cssText) {
-    selectedElem.textContent = prevElem.textContent + selectedElem.textContent;
-    prevElem.remove();
+const combineSimilarStyle = () => {
+  let element = document.querySelector('span');
+
+  while (element !== null) {
+    nextElem = element.nextElementSibling;
+    prevElem = element.previousElementSibling;
+
+    if (nextElem && element.style.cssText
+      === nextElem.style.cssText) {
+      element.textContent += nextElem.textContent;
+      nextElem.remove();
+    }
+    if (prevElem && element.style.cssText === prevElem.style.cssText) {
+      element.textContent = prevElem.textContent + element.textContent;
+      prevElem.remove();
+    }
+    element = element.nextElementSibling;
   }
 };
 
@@ -101,28 +110,53 @@ const changeColor = () => {
   if (!checkSelection()) return alert('Select text');
   selectText();
   const selectedElem = document.querySelector('.selected');
-  selectedElem.style.color = '#a0537b';
-  combineSimilarStyle(selectedElem);
-  selectedElem.classList.remove('selected');
+  if (selectedElem) {
+    selectedElem.style.color = '#a0537b';
+    selectedElem.classList.remove('selected');
+  } else {
+    const selectedAllElem = document.querySelectorAll('.selecteList');
+    selectedAllElem.forEach((elem) => {
+      elem.style.color = '#a0537b';
+      elem.classList.remove('selecteList');
+    });
+  }
+  combineSimilarStyle();
 };
 
 const changeFont = () => {
   if (!checkSelection()) return alert('Select text');
   selectText();
   const selectedElem = document.querySelector('.selected');
-  selectedElem.style.fontSize = '60px';
-  combineSimilarStyle(selectedElem);
-  selectedElem.classList.remove('selected');
+  if (selectedElem) {
+    selectedElem.style.fontSize = '60px';
+    selectedElem.classList.remove('selected');
+  } else {
+    const selectedAllElem = document.querySelectorAll('.selecteList');
+    selectedAllElem.forEach((elem) => {
+      elem.style.fontSize = '60px';
+      elem.classList.remove('selecteList');
+    });
+  }
+  combineSimilarStyle();
 };
 
 const changeBg = () => {
   if (!checkSelection()) return alert('Select text');
   selectText();
   const selectedElem = document.querySelector('.selected');
-  selectedElem.style.background = '#f8bbd0';
-  selectedElem.style.borderRadius = '3px';
-  combineSimilarStyle(selectedElem);
-  selectedElem.classList.remove('selected');
+  if (selectedElem) {
+    selectedElem.style.background = '#f8bbd0';
+    selectedElem.style.borderRadius = '3px';
+    selectedElem.classList.remove('selected');
+  } else {
+    const selectedAllElem = document.querySelectorAll('.selecteList');
+    selectedAllElem.forEach((elem) => {
+      elem.style.background = '#f8bbd0';
+      elem.style.borderRadius = '3px';
+      elem.classList.remove('selecteList');
+    });
+  }
+  combineSimilarStyle();
 };
 
 const creatParagraph = () => {
@@ -138,19 +172,40 @@ const creatParagraph = () => {
 
 const toJson = () => {
   if (!checkSelection()) return alert('Select text');
-  let firstSpan = window.getSelection().anchorNode.parentNode.closest('span');
+  const select = window.getSelection();
+  let checkPoint = select.anchorNode.parentNode.nextElementSibling;
+
   const arrObj = [];
-  while (firstSpan !== null) {
-    const { background, fontSize, color } = firstSpan.style;
+
+  const fitstSpan = {
+    text: getString(select.anchorNode.parentNode.textContent, select.anchorOffset, select.anchorNode.length),
+    color: select.anchorNode.parentNode.style.color,
+    background: select.anchorNode.parentNode.style.background,
+    fontSize: select.anchorNode.parentNode.style.fontSize,
+  };
+  arrObj.push(fitstSpan);
+
+  while (checkPoint !== select.extentNode.parentNode) {
+    const { background, fontSize, color } = checkPoint.style;
     const obj = {
-      text: firstSpan.textContent,
+      text: checkPoint.textContent,
       color,
       background,
       fontSize,
     };
-    firstSpan = firstSpan.nextElementSibling;
+    checkPoint = checkPoint.nextElementSibling;
     arrObj.push(obj);
   }
+
+  const lastSpan = {
+    text: getString(select.extentNode.parentNode.textContent, 0, select.extentOffset),
+    color: select.extentNode.parentNode.style.color,
+    background: select.extentNode.parentNode.style.background,
+    fontSize: select.extentNode.parentNode.style.fontSize,
+  };
+  arrObj.push(lastSpan);
+
+
   console.log(JSON.stringify(arrObj));
 };
 
